@@ -4,7 +4,7 @@ import socket
 import threading
 import random
 
-RAND_RANGE = 30
+RAND_RANGE = 10
 
 DEFAULT_SERVER_PORT = 5400
 DEFAULT_CLIENT_PORT = 5401
