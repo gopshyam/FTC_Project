@@ -9,7 +9,7 @@ client = boto3.client('ec2')
 
 def delete_instance_by_ip(ip):
     print "DELETING " + ip 
-    client_description_response = client.describe_instances(Filters = {'Name':'private-ip-address', 'Values':[ip]})
+    client_description_response = client.describe_instances(Filters = [{'Name':'private-ip-address', 'Values':[ip]}])
     reservations = client_description_response['Reservations']
     for reservation in reservations:
         if 'PrivateIpAddress' in reservation['Instances'][0].keys() and ip == reservation['Instances'][0]['PrivateIpAddress']:
