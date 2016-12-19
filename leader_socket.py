@@ -119,7 +119,7 @@ def server_worker():
 
         for addr in response.keys():
             if response[addr] != agreed_value:
-                replica_ids.remove(addr)
+                replica_ips.remove(addr)
                 print str(addr) + " IS FAULTY. EXTERMINATING"
                 aws_interface.handle_fault(str(addr))
 
