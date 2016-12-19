@@ -4,6 +4,8 @@ import socket
 import random
 import threading
 import time
+import aws_interface
+import sys
 
 RANDOM_NUMBER_RANGE = 100
 SEQUENCE_LIMIT = 100
@@ -12,6 +14,10 @@ SLEEP_TIME = 10
 DEFAULT_LISTENER_PORT = 5400
 DEFAULT_REPLICA_PORT = 5401
 SERVER_IP = "ip-172-31-46-58.us-west-2.compute.internal"
+
+F = 1
+if len(sys.argv) > 1:
+    F = sys.argv[1]
 
 replica_ips = list()
 sequence_number = 0
@@ -48,7 +54,8 @@ def listen_for_replicas():
         print x
         clientsocket.send("WHATTUP YO OK")
         print address
-        replica_ips.append(address[0])
+        if address[0] not in replica_ips:
+            replica_ips.append(address[0])
 
 
 def send_message(ip, message):
@@ -86,7 +93,7 @@ def server_worker():
     global sequence_number, shared_data
     while(True):
         time.sleep(SLEEP_TIME)
-        if (len(replica_ips) == 0):
+        if (len(replica_ips) < 2*F + 1):
             continue
 
         message_content = random.randrange(RANDOM_NUMBER_RANGE)
@@ -112,7 +119,9 @@ def server_worker():
 
         for addr in response.keys():
             if response[addr] != agreed_value:
+                replica_ids.remove(addr)
                 print str(addr) + " IS FAULTY. EXTERMINATING"
+                aws_interface.handle_fault(str(addr))
 
 
 replica_listener_thread = threading.Thread(target = listen_for_replicas)
