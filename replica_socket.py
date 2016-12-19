@@ -2,12 +2,18 @@
 
 import socket
 import threading
+import random
+
+RAND_RANGE = 30
 
 DEFAULT_SERVER_PORT = 5400
 DEFAULT_CLIENT_PORT = 5401
 LEADER_IP = "ip-172-31-46-58.us-west-2.compute.internal"
 
 def process(message):
+    rand_var = random.randrange(RAND_RANGE)
+    if (rand_var == 1):
+        message = message + '1'
     return message
 
 def start_listener():
