@@ -8,7 +8,7 @@ RAND_RANGE = 10
 
 DEFAULT_SERVER_PORT = 5400
 DEFAULT_CLIENT_PORT = 5401
-LEADER_IP = "ip-172-31-46-58.us-west-2.compute.internal"
+LEADER_IP = "10.0.1.217"
 
 def process(message):
     rand_var = random.randrange(RAND_RANGE)
