@@ -13,7 +13,7 @@ SLEEP_TIME = 10
 
 DEFAULT_LISTENER_PORT = 5400
 DEFAULT_REPLICA_PORT = 5401
-SERVER_IP = "ip-172-31-46-58.us-west-2.compute.internal"
+SERVER_IP = ""
 
 F = 1
 if len(sys.argv) > 1:
