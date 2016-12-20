@@ -11,15 +11,15 @@ RANDOM_NUMBER_RANGE = 100
 SEQUENCE_LIMIT = 100
 SLEEP_TIME = 10
 
-DEFAULT_LISTENER_PORT = 5400
-DEFAULT_REPLICA_PORT = 5401
-SERVER_IP = "ip-172-31-46-58.us-west-2.compute.internal"
+DEFAULT_LISTENER_PORT = 4500
+DEFAULT_REPLICA_PORT = 4501
+SERVER_IP = ""
 
 F = 1
 if len(sys.argv) > 1:
     F = sys.argv[1]
 
-replica_ips = list()
+replica_ips = {}
 sequence_number = 0
 
 port_list = range(5500, 5600)
@@ -45,25 +45,33 @@ def listen_for_replicas():
     print serversocket.getsockname()[1]
 
     serversocket.listen(5)
+    
+    with open('outf', 'w+') as of:
+        of.write("Listening")
+
     #become a server socket
     while(True):
         (clientsocket, address) = serversocket.accept()
         print "CONNECTION RECEIVED"
+        with open('outf', 'w+') as of:
+            of.write("Connected!")
+
         print clientsocket, address
         x = clientsocket.recv(20)
         print x
+        task_no = int(x.split(':')[-1].strip())
         clientsocket.send("WHATTUP YO OK")
         print address
-        if address[0] not in replica_ips:
-            replica_ips.append(address[0])
+        if address[0] not in replica_ips.keys():
+            replica_ips[address[0]] = (address[1], task_no)
 
 
-def send_message(ip, message):
+def send_message(ip, message, port):
     '''Sends a message to the replica whose ip is specified,
     and stores the response in a common data structure
     TODO: Locks'''
     replica_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    replica_socket.connect((ip, DEFAULT_REPLICA_PORT))
+    replica_socket.connect((ip, port))
     replica_socket.send(message)
 
     response = replica_socket.recv(20)
@@ -72,8 +80,9 @@ def send_message(ip, message):
     r_split = response.split(':')
     seq_no = int(r_split[0].strip())
     content = int(r_split[1].strip())
+    task_no = int(r_split[2].strip())
 
-    shared_data[seq_no][ip] = content
+    shared_data[seq_no][task_no] = content
 
 def find_agreed_value(response):
     value_list = list()
@@ -93,15 +102,15 @@ def server_worker():
     global sequence_number, shared_data
     while(True):
         time.sleep(SLEEP_TIME)
-        if (len(replica_ips) < 2*F + 1):
+        if (len(replica_ips.keys()) < 2*F + 1):
             continue
 
         message_content = random.randrange(RANDOM_NUMBER_RANGE)
         sequence_number = sequence_number % SEQUENCE_LIMIT + 1
         message = str(sequence_number) + ": " + str(message_content)
         thread_list = list()
-        for ip in replica_ips:
-            t = threading.Thread(target = send_message, args=(ip, message))
+        for ip in replica_ips.keys():
+            t = threading.Thread(target = send_message, args=(ip, message, replica_ips[ip]))
             thread_list.append(t)
             t.start()
 
@@ -119,7 +128,9 @@ def server_worker():
 
         for addr in response.keys():
             if response[addr] != agreed_value:
-                replica_ips.remove(addr)
+                for replica in replica_ips.keys():
+                    if replica_ips[replica] == addr:
+                        replica_ips[replica] = []
                 print str(addr) + " IS FAULTY. EXTERMINATING"
                 aws_interface.handle_fault(str(addr))
 

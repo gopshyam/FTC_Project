@@ -3,18 +3,23 @@
 import socket
 import threading
 import random
+import sys
+
+task_no = 1
+if len(sys.argv) > 1:
+    task_no = sys.argv[1]
 
 RAND_RANGE = 10
 
-DEFAULT_SERVER_PORT = 5400
-DEFAULT_CLIENT_PORT = 5401
-LEADER_IP = "ip-172-31-46-58.us-west-2.compute.internal"
+DEFAULT_SERVER_PORT = 4500
+DEFAULT_CLIENT_PORT = 4501
+LEADER_IP = "10.0.1.216"
 
 def process(message):
     rand_var = random.randrange(RAND_RANGE)
     if (rand_var == 1):
         message = message + '1'
-    return message
+    return message + ':' + str(task_no)
 
 def start_listener():
     listener_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,7 +42,7 @@ def contact_leader():
     clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect((LEADER_IP, DEFAULT_SERVER_PORT))
 
-    x = clientsocket.send("HELLO THERE") 
+    x = clientsocket.send("HELLO THERE:" + task_no) 
     print x
     y = clientsocket.recv(20)
     print y

@@ -34,8 +34,12 @@ def find_most_recent_image():
 def create_instance_with_image(image_id):
     response = client.run_instances(InstanceType = 't2.micro', ImageId = image_id, MinCount = 1, MaxCount = 1, KeyName = "shyam_key", SecurityGroupIds = ['sg-5c76a125','sg-1175a268'])
 
-def handle_fault(ip):
-    delete_instance_by_ip(ip)
-    image_id, index = find_most_recent_image()
-    create_instance_with_image(image_id)
+
+def handle_fault(task_id):
+    task_name = "Client" + str(task_no)
+    print "STOPPING TASK " + str(task_name)
+    response = client.describe_task_definition(taskDefinition = task_name)
+    task_arn = response['taskDefinition']['taskDefinitionArn']
+    client.stop_task(cluster = "shyam", taskDefinition = task_arn)
+    client.run_task(cluster = "shyam", taskDefinition = task_name)
 
